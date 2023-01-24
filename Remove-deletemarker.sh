@@ -37,9 +37,10 @@ echo
 if [[ ${USER} == "" ]]; then read -p "User : " USER; fi
 
 echo
-if [[ ${PASSWD} == "" ]]; then read -p "Password : " PASSWD; fi
+if [[ ${PASSWD} == "" ]]; then read -s -p "Password : " PASSWD; fi
 
 
+echo
 echo
 if [[ ${DOMAIN} == "" ]]; then read -p "Enter domain : " DOMAIN; fi
 
@@ -66,6 +67,9 @@ result=$(curl -fsS -u ${USER}:${PASSWD} --post301 -X GET -L "https://${DOMAIN}/$
 
 if [[ $(echo $result) != "[ ]" ]]
 then 
+  echo
+  echo "Recover object(s): "
+  echo
   curl -fsS -u ${USER}:${PASSWD} --post301 -X GET -L "https://${DOMAIN}/${BUCKET}?format=json&versions&deletemarker=true"| \
    jq  -c '[.[] | {name: .name, version: .hash} ]' | sed "s/,{/\n{/g"  | sed "s/}]/}/g" | sed "s/\[{/{/g" | \
   while read FILE; do
@@ -75,8 +79,7 @@ then
     echo $name
     curl -fsS -u ${USER}:${PASSWD} --post301 -X DELETE -L  "https://${DOMAIN}/${BUCKET}/$name?version=$version"
   done
+else
+echo
+echo "Not object(s) with delete marker!"
 fi
-
-
-
-
